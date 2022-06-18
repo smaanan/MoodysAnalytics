@@ -1,2 +1,2 @@
 # MoodysAnalytics
-Moodys Analytics Coding Test for Candidates
+Moody's Analytics Coding Test for Candidates
