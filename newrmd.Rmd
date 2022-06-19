@@ -1,0 +1,477 @@
+---
+title: "Moody's Analytics Coding Test"
+author: "Said Maanan"
+date: "`r Sys.Date()`"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+#knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
+```
+
+## Introduction
+
+In this document I present my solution to the Moody's Analytics Coding Test for Candidates. 
+
+## Problem 1
+
+The first step to answering the questions in the first problem is to load the data frame `data.csv`:
+
+```{r}
+library(readr)
+data <- read_csv("~/Downloads/Coding_Test/data.csv")
+```
+
+The `readr` package tells us that the data frame consists of 5 variables and 13646 observations. Now we can start answering our questions.
+
+### Question 1
+
+Generate the variable `age` for each loan:
+
+```{r}
+library(lubridate)
+data$age = - round(interval(today(), ymd(data$time, truncated = 2)) / years(1))
+```
+
+What is the maximum age of the default rate observed in the sample?
+
+```{r}
+max(data$age)
+```
+
+The maximum age of non-missing default rate observed in the sample is 17 years.
+
+### Question 2
+
+Create a table reporting the summary statistics for `default_rate`:
+
+```{r}
+summary(data$default_rate)
+```
+
+Percentage of missing cells:
+
+```{r}
+sum(is.na(data$default_rate))/length(data$default_rate)*100
+```
+
+### Question 3
+
+Generate the variable `lifecycle`:
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+data <- data %>% 
+  group_by(age) %>% 
+  mutate(lifecycle = mean(default_rate, na.rm = TRUE))
+```
+
+Plot `lifecycle` over age using line chart:
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+ggplot(data=data, aes(x=age, y=lifecycle, group=1)) +
+  geom_line()+
+  geom_point()
+```
+
+### Question 4
+
+Pick two loans with the default rate observed for at least five periods.
+
+```{r}
+book_1 = data[data$account_id=='400293',]
+book_2 = data[data$account_id=='401749',]
+```
+
+For each loan, plot the lifecycle of the default rate.
+
+```{r}
+plot_1 = ggplot(data=book_1, aes(x=age, y=default_rate, group=1)) +
+  geom_line()+
+  geom_point()
+```
+
+```{r}
+plot_2 = ggplot(data=book_2, aes(x=age, y=default_rate, group=1)) +
+  geom_line()+
+  geom_point()
+```
+
+```{r}
+grid.arrange(plot_1, plot_2, ncol=2)
+```
+
+Do the two loans follow the portfolio's lifecycle?
+
+```{r}
+plot_3 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
+  geom_line() +
+  geom_line(data = book_1, aes(x=age, y=default_rate, group=1), color = "red")
+
+plot_4 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
+  geom_line() +
+  geom_line(data = book_2, aes(x=age, y=default_rate, group=1), color = "red")
+
+grid.arrange(plot_3, plot_4, ncol=2)
+```
+
+The first account `400293` seems to align closely with the portfolio's lifecycle, but the second account `401749` doesn't.
+
+### Question 5
+
+Estimate a fixed-effect model for the `default_rate` as target variable and `age` and `r12_gdp` as fixed effects:
+
+```{r}
+library(fixest)
+mod_bl <- feols(default_rate ~ account_id | age^r12_gdp_bl, data = data)
+summary(mod_bl)
+
+mod_st <- feols(default_rate ~ account_id | age^r12_gdp_bl, data = data)
+summary(mod_st)
+```
+
+Obtain predictions
+
+```{r}
+fitted_bl = mod_bl$fitted.values
+fitted_st = mod_st$fitted.values
+```
+
+How can you ensure that the predictions are bounded between 0 and 1
+
+```{r}
+mod_bound = feglm(default_rate ~ account_id | age + r12_gdp_bl, data = data, family = "quasibinomial")
+summary(mod_bound$fitted.values)
+
+mod_bound_st = feglm(default_rate ~ account_id | age + r12_gdp_st, data = data, family = "quasibinomial")
+```
+
+
+Plot the actual vs the predicted values of the default rate for the two loans selected previously
+
+```{r}
+
+#plot(fitted_bl, data[unlist(mod_bl$obs_selection),]$default_rate)
+#plot(fitted_st, data[unlist(mod_st$obs_selection),]$default_rate)
+
+f_1 = mod_bound$fitted.values
+plot(f_1, data[unlist(mod_bound$obs_selection),]$default_rate)
+```
+
+
+```{r}
+pred_1 = predict(mod_bound, book_1)
+pred_2 = predict(mod_bound, book_2)
+
+df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
+df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
+
+pplot_1 = ggplot(data = df_1, aes(x=Age, y=Actual, group=1)) +
+  geom_point() +
+  geom_point(data = df_1, aes(x=Age, y=Predicted, group=1), color = "red")
+
+pplot_2 = ggplot(data = df_2, aes(x=Age, y=Actual, group=1)) +
+  geom_point() +
+  geom_point(data = df_2, aes(x=Age, y=Predicted, group=1), color = "red")
+
+grid.arrange(pplot_1, pplot_2, ncol=2)
+```
+
+## Problem 2
+
+### Question 1
+
+```{r}
+library(readr)
+mortgages_small <- read_csv("~/Downloads/Coding_Test/mortgages_small.csv")
+```
+
+How many observations in the data set?
+
+```{r}
+nrow(mortgages_small)
+```
+
+How many loans in the data set?
+
+```{r}
+length(levels(as.factor(mortgages_small$loan_id)))
+```
+
+What is the time coverage in terms of months?
+
+```{r}
+library(lubridate)
+
+min(ym(mortgages_small$obs_month))
+
+max(ym(mortgages_small$obs_month))
+```
+
+### Question 2
+
+Create a table reporting the number of loans and percentage of loans per month.
+
+```{r}
+mortgages_small$obs_m = ym(mortgages_small$obs_month)
+mortgages_small$month = month(mortgages_small$obs_m)
+
+monthly_loans = mortgages_small %>%
+  group_by(month) %>%
+  dplyr::summarise(n = n())
+
+monthly_loans$prc = monthly_loans$n/sum(monthly_loans$n)*100
+
+monthly_loans
+```
+
+Create a bar plot showing the number of loans at each observation date.
+
+```{r}
+
+barplot(monthly_loans$n,
+        main = "Loans vs Months",
+        xlab = "Months",
+        ylab = "Loans",
+        names.arg = 1:12)
+```
+
+### Question 3
+
+Create a table reporting the number and share of observations per origination year.
+
+```{r}
+mortgages_small$ori_y = ym(mortgages_small$orig_date)
+mortgages_small$year = year(mortgages_small$ori_y)
+
+yearly_loans = mortgages_small %>%
+  group_by(year) %>%
+  dplyr::summarise(n = n())
+
+yearly_loans$prc = yearly_loans$n/sum(yearly_loans$n)*100
+
+yearly_loans
+```
+
+Create a bar plot showing the number of loans at each origination date.
+
+```{r}
+barplot(yearly_loans$n,
+        main = "Loans vs Years",
+        xlab = "Years",
+        ylab = "Loans",
+        names.arg = yearly_loans$year)
+```
+
+### Question 4
+
+Create a new variable that is the first observation date of each account.
+
+```{r}
+library(dplyr)
+
+mortgages_small =  mortgages_small %>%
+  group_by(loan_id) %>%
+  mutate(first_obs = min(obs_m)) %>%
+  ungroup()
+```
+
+Create and summarize the observation lag.
+
+```{r}
+mortgages_small$obs_lag = - interval(ymd(mortgages_small$obs_m), ymd(mortgages_small$first_obs)) / days(1)
+summary(mortgages_small$obs_lag)
+```
+
+### Question 5
+
+Merge `macro.csv` and `mortgages.csv`
+
+```{r}
+macros <- read_csv("~/Downloads/Coding_Test/macros.csv")
+macros$date = ym(macros$date)
+merged = merge(x = mortgages_small, y = macros, by.x = "obs_m", by.y = "date", all = TRUE)
+```
+
+### Question 6
+
+Create an indicator variable `default_flag`.
+
+```{r}
+merged = mutate(merged, default_flag = ifelse(arrears >= 3, 1, 0))
+```
+
+### Question 7
+
+Create a single table reporting the summary statistics.
+
+```{r}
+merged %>% 
+    select(default_flag, current_balance, current_ltv, credit_score, original_ltv, hpi_o, hpi_t) %>% 
+    map_df(.f = ~ broom::tidy(summary(.x)), .id = "variable")
+```
+
+### Question 8
+
+Tabulate the variables `arrears`, `mortgage_type` and `occupancy`.
+
+```{r}
+df = data_frame(merged$arrears, merged$mortgage_type, merged$occupancy)
+apply(df, 2, table)
+
+# Percentage: waiting for an answer
+library(janitor)
+
+apply(df, 2, tabyl)
+```
+
+### Question 9
+
+Remove missing observations from the data set.
+
+```{r}
+merged$d_hpi = merged$hpi_t - merged$hpi_o
+merged = na.omit(merged)
+```
+
+### Question 10
+
+Partition the data set into partition and test samples
+
+```{r}
+library(caret)
+set.seed(1219)
+
+merged$default_flag = as.factor(merged$default_flag)
+ind   = createDataPartition(merged$mortgage_type, p=0.8,list = F)
+train = merged[ind,]
+test  = merged[-ind,]
+```
+
+### Question 11
+
+Estimate a logit model.
+
+```{r}
+log_mod = glm(default_flag ~ credit_score + occupancy + current_ltv + mortgage_type + gdp_t + d_hpi, data = train, family = binomial)
+```
+
+### Question 12
+
+Interpret the coefficients of the model.
+
+```{r}
+summary(log_mod)
+```
+
+### Question 13
+
+Generate predicted default rates from the model.
+
+```{r}
+train$pred_default = log_mod$fitted.values
+```
+
+### Question 14
+
+In-sample model validation.
+
+Plot average predicted vs average actual over time.
+
+```{r}
+train$default_flag = as.numeric(as.character(train$default_flag))
+agg_1 = train %>% group_by(obs_m) %>% summarise_at(vars(default_flag, pred_default), mean)
+agg_1
+
+plot(agg_1$obs_m, agg_1$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y" )
+points(agg_1$obs_m, agg_1$pred_default, col="red", pch="*")
+lines(agg_1$obs_m, agg_1$pred_default, col="red",lty=2)
+```
+
+Create 3 categories of borrower credit score.
+
+```{r}
+train = mutate(train, bcs = ifelse(credit_score<= 650, "low-score", ifelse(credit_score > 650 & credit_score <= 800, "mid-score", "high-score")))
+
+agg_2 = train %>% group_by(bcs) %>% summarise_at(vars(default_flag, pred_default), mean)
+agg_2
+class(agg_2)
+barplot(t(as.matrix(agg_2[,-1])),
+        main = "Actual Default vs Predicted Default",
+        xlab = "Score Category",
+        ylab = "Default Rate",
+        names.arg = c("High Score", "Low Score", "Mid Score"),
+        col = gray.colors(2),
+        beside = TRUE)
+legend("topleft",
+       c("Default", "Pred. Default"),
+       fill = gray.colors(2))
+```
+
+### Question 15
+
+Generate out of sample predictions.
+
+```{r}
+test$oos_pred = predict(log_mod, test, type = "response")
+
+test$default_flag = as.numeric(as.character(test$default_flag))
+
+agg_3 = test %>% group_by(obs_m) %>% summarise_at(vars(default_flag, oos_pred), mean)
+
+plot(agg_3$obs_m, agg_3$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y")
+points(agg_3$obs_m, agg_3$oos_pred, col="red", pch="*")
+lines(agg_3$obs_m, agg_3$oos_pred, col="red",lty=2)
+```
+
+### Question 16
+
+Create `outcome` variable.
+
+```{r}
+test = mutate(test, outcome = ifelse(oos_pred > 0.1, 1, 0))
+
+# test$outcome = as.factor(test$outcome)
+```
+
+
+### Question 17
+
+Create confusion matrix.
+
+```{r}
+library(InformationValue)
+optimal = optimalCutoff(test$default_flag, test$outcome)[1]
+confusionMatrix(test$default_flag, test$outcome)
+```
+
+### Question 18
+
+Create a receiver operating curve.
+
+```{r}
+library(pROC)
+test_roc = roc(test$default_flag ~ test$outcome, plot = TRUE, print.auc = TRUE)
+print(test_roc)
+```
+
+```{r}
+library(ROCR)
+pred = prediction(test$oos_pred, test$default_flag)
+perf <- performance(pred,"tpr","fpr")
+plot(perf,colorize=TRUE)
+```
+
+```{r}
+library(PRROC)
+PRROC_obj <- roc.curve(scores.class0 = test$oos_pred, weights.class0=test$default_flag, curve=TRUE)
+plot(PRROC_obj)
+```
+
+
