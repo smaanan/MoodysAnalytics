@@ -73,11 +73,14 @@ data <- data %>%
 Plot `lifecycle` over age using line chart:
 
 ```{r}
-library(ggplot2)
-library(gridExtra)
-ggplot(data=data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line()+
-  geom_point()
+
+plot(unique(data[,c("age","lifecycle")]), type = "b", pch = 19, col = "red",
+     main = "Age vs Lifecycle",
+     xlab = "Age",
+     ylab = "Lifecycle")
+
+ library(ggplot2)
+ library(gridExtra)
 ```
 
 ### Question 4
@@ -92,33 +95,42 @@ book_2 = data[data$account_id=='401749',]
 For each loan, plot the lifecycle of the default rate.
 
 ```{r}
-plot_1 = ggplot(data=book_1, aes(x=age, y=default_rate, group=1)) +
-  geom_line()+
-  geom_point()
-```
+par(mfrow=c(1,2))
 
-```{r}
-plot_2 = ggplot(data=book_2, aes(x=age, y=default_rate, group=1)) +
-  geom_line()+
-  geom_point()
-```
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red",
+     main = "Loan 1",
+     xlab = "Age",
+     ylab = "Default rate")
 
-```{r}
-grid.arrange(plot_1, plot_2, ncol=2)
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red",
+     main = "Loan 2",
+     xlab = "Age",
+     ylab = "Default rate")
 ```
 
 Do the two loans follow the portfolio's lifecycle?
 
 ```{r}
-plot_3 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line() +
-  geom_line(data = book_1, aes(x=age, y=default_rate, group=1), color = "red")
 
-plot_4 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line() +
-  geom_line(data = book_2, aes(x=age, y=default_rate, group=1), color = "red")
+par(mfrow=c(1,2))
 
-grid.arrange(plot_3, plot_4, ncol=2)
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.035),
+     main = "Loan 1",
+     xlab = "Age",
+     ylab = "Default rate")
+
+points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
+
+lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
+
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.08),
+     main = "Loan 2",
+     xlab = "Age",
+     ylab = "Default rate")
+
+points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
+
+lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
 ```
 
 The first account `400293` seems to align closely with the portfolio's lifecycle, but the second account `401749` doesn't.
@@ -172,15 +184,25 @@ pred_2 = predict(mod_bound, book_2)
 df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
 df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
 
-pplot_1 = ggplot(data = df_1, aes(x=Age, y=Actual, group=1)) +
-  geom_point() +
-  geom_point(data = df_1, aes(x=Age, y=Predicted, group=1), color = "red")
+par(mfrow=c(1,2))
 
-pplot_2 = ggplot(data = df_2, aes(x=Age, y=Actual, group=1)) +
-  geom_point() +
-  geom_point(data = df_2, aes(x=Age, y=Predicted, group=1), color = "red")
+plot(x = df_1$Age, y = df_1$Predicted, type = "p", pch = 19, col = "red",
+     main = "Loan 1",
+     xlab = "Time",
+     ylab = "Default rate")
 
-grid.arrange(pplot_1, pplot_2, ncol=2)
+points(x = df_1$Age, df_1$Actual, type = "p", pch = 19, col = "black")
+
+legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
+
+plot(x = df_2$Age, y = df_2$Predicted, type = "p", pch = 19, col = "red",
+     main = "Loan 2",
+     xlab = "Time",
+     ylab = "Default rate")
+
+points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
+
+legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 ```
 
 ## Problem 2
@@ -322,12 +344,8 @@ merged %>%
 Tabulate the variables `arrears`, `mortgage_type` and `occupancy`.
 
 ```{r}
-df = data_frame(merged$arrears, merged$mortgage_type, merged$occupancy)
-apply(df, 2, table)
-
-# Percentage: waiting for an answer
 library(janitor)
-
+df = data_frame(merged$arrears, merged$mortgage_type, merged$occupancy)
 apply(df, 2, tabyl)
 ```
 
@@ -387,11 +405,20 @@ Plot average predicted vs average actual over time.
 ```{r}
 train$default_flag = as.numeric(as.character(train$default_flag))
 agg_1 = train %>% group_by(obs_m) %>% summarise_at(vars(default_flag, pred_default), mean)
-agg_1
 
-plot(agg_1$obs_m, agg_1$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y" )
-points(agg_1$obs_m, agg_1$pred_default, col="red", pch="*")
-lines(agg_1$obs_m, agg_1$pred_default, col="red",lty=2)
+plot(agg_1$obs_m, agg_1$default_flag,
+     main = "Actual Default vs Predicted Default",
+     xlab = "Time",
+     ylab = "Default rate",
+     type = "o", col  = "blue", pch=20,
+     )
+lines(agg_1$obs_m, agg_1$pred_default, 
+      lty = 2, col="red")
+
+points(agg_1$obs_m, agg_1$pred_default,
+       col="red", pch = 18)
+
+legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
 Create 3 categories of borrower credit score.
@@ -400,8 +427,7 @@ Create 3 categories of borrower credit score.
 train = mutate(train, bcs = ifelse(credit_score<= 650, "low-score", ifelse(credit_score > 650 & credit_score <= 800, "mid-score", "high-score")))
 
 agg_2 = train %>% group_by(bcs) %>% summarise_at(vars(default_flag, pred_default), mean)
-agg_2
-class(agg_2)
+
 barplot(t(as.matrix(agg_2[,-1])),
         main = "Actual Default vs Predicted Default",
         xlab = "Score Category",
@@ -416,18 +442,33 @@ legend("topleft",
 
 ### Question 15
 
-Generate out of sample predictions.
+Generate out-of-sample predictions.
 
 ```{r}
 test$oos_pred = predict(log_mod, test, type = "response")
 
 test$default_flag = as.numeric(as.character(test$default_flag))
+```
+
+Plot average predicted vs average actual over time.
+
+```{r}
 
 agg_3 = test %>% group_by(obs_m) %>% summarise_at(vars(default_flag, oos_pred), mean)
 
-plot(agg_3$obs_m, agg_3$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y")
-points(agg_3$obs_m, agg_3$oos_pred, col="red", pch="*")
-lines(agg_3$obs_m, agg_3$oos_pred, col="red",lty=2)
+plot(agg_3$obs_m, agg_3$default_flag,
+     main = "Actual Default vs Predicted Default",
+     xlab = "Time",
+     ylab = "Default rate",
+     type = "o", col  = "blue", pch=20,
+     )
+lines(agg_3$obs_m, agg_3$oos_pred, 
+      lty = 2, col="red")
+
+points(agg_3$obs_m, agg_3$oos_pred,
+       col="red", pch = 18)
+
+legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
 ### Question 16
@@ -454,19 +495,6 @@ confusionMatrix(test$default_flag, test$outcome)
 ### Question 18
 
 Create a receiver operating curve.
-
-```{r}
-library(pROC)
-test_roc = roc(test$default_flag ~ test$outcome, plot = TRUE, print.auc = TRUE)
-print(test_roc)
-```
-
-```{r}
-library(ROCR)
-pred = prediction(test$oos_pred, test$default_flag)
-perf <- performance(pred,"tpr","fpr")
-plot(perf,colorize=TRUE)
-```
 
 ```{r}
 library(PRROC)

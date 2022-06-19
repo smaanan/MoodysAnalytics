@@ -77,14 +77,18 @@ data <- data %>%
 Plot `lifecycle` over age using line chart:
 
 ``` r
-library(ggplot2)
-library(gridExtra)
-ggplot(data=data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line()+
-  geom_point()
+plot(unique(data[,c("age","lifecycle")]), type = "b", pch = 19, col = "red",
+     main = "Age vs Lifecycle",
+     xlab = "Age",
+     ylab = "Lifecycle")
 ```
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+ library(ggplot2)
+ library(gridExtra)
+```
 
 ### Question 4
 
@@ -98,38 +102,46 @@ book_2 = data[data$account_id=='401749',]
 For each loan, plot the lifecycle of the default rate.
 
 ``` r
-plot_1 = ggplot(data=book_1, aes(x=age, y=default_rate, group=1)) +
-  geom_line()+
-  geom_point()
+par(mfrow=c(1,2))
+
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red",
+     main = "Loan 1",
+     xlab = "Age",
+     ylab = "Default rate")
+
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red",
+     main = "Loan 2",
+     xlab = "Age",
+     ylab = "Default rate")
 ```
 
-``` r
-plot_2 = ggplot(data=book_2, aes(x=age, y=default_rate, group=1)) +
-  geom_line()+
-  geom_point()
-```
-
-``` r
-grid.arrange(plot_1, plot_2, ncol=2)
-```
-
-![](newrmd_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 Do the two loans follow the portfolio’s lifecycle?
 
 ``` r
-plot_3 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line() +
-  geom_line(data = book_1, aes(x=age, y=default_rate, group=1), color = "red")
+par(mfrow=c(1,2))
 
-plot_4 = ggplot(data = data, aes(x=age, y=lifecycle, group=1)) +
-  geom_line() +
-  geom_line(data = book_2, aes(x=age, y=default_rate, group=1), color = "red")
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.035),
+     main = "Loan 1",
+     xlab = "Age",
+     ylab = "Default rate")
 
-grid.arrange(plot_3, plot_4, ncol=2)
+points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
+
+lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
+
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.08),
+     main = "Loan 2",
+     xlab = "Age",
+     ylab = "Default rate")
+
+points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
+
+lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 The first account `400293` seems to align closely with the portfolio’s
 lifecycle, but the second account `401749` doesn’t.
@@ -204,7 +216,7 @@ f_1 = mod_bound$fitted.values
 plot(f_1, data[unlist(mod_bound$obs_selection),]$default_rate)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ``` r
 pred_1 = predict(mod_bound, book_1)
@@ -213,18 +225,28 @@ pred_2 = predict(mod_bound, book_2)
 df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
 df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
 
-pplot_1 = ggplot(data = df_1, aes(x=Age, y=Actual, group=1)) +
-  geom_point() +
-  geom_point(data = df_1, aes(x=Age, y=Predicted, group=1), color = "red")
+par(mfrow=c(1,2))
 
-pplot_2 = ggplot(data = df_2, aes(x=Age, y=Actual, group=1)) +
-  geom_point() +
-  geom_point(data = df_2, aes(x=Age, y=Predicted, group=1), color = "red")
+plot(x = df_1$Age, y = df_1$Predicted, type = "p", pch = 19, col = "red",
+     main = "Loan 1",
+     xlab = "Time",
+     ylab = "Default rate")
 
-grid.arrange(pplot_1, pplot_2, ncol=2)
+points(x = df_1$Age, df_1$Actual, type = "p", pch = 19, col = "black")
+
+legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
+
+plot(x = df_2$Age, y = df_2$Predicted, type = "p", pch = 19, col = "red",
+     main = "Loan 2",
+     xlab = "Time",
+     ylab = "Default rate")
+
+points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
+
+legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 ## Problem 2
 
@@ -311,7 +333,7 @@ barplot(monthly_loans$n,
         names.arg = 1:12)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 ### Question 3
 
@@ -354,7 +376,7 @@ barplot(yearly_loans$n,
         names.arg = yearly_loans$year)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 ### Question 4
 
@@ -424,29 +446,8 @@ merged %>%
 Tabulate the variables `arrears`, `mortgage_type` and `occupancy`.
 
 ``` r
-df = data_frame(merged$arrears, merged$mortgage_type, merged$occupancy)
-apply(df, 2, table)
-```
-
-    ## $`merged$arrears`
-    ## 
-    ##     0     1     2     3     4 
-    ## 52124  5523  2371  1538    27 
-    ## 
-    ## $`merged$mortgage_type`
-    ## 
-    ## bullet    erm linear 
-    ##  19958  17326  18181 
-    ## 
-    ## $`merged$occupancy`
-    ## 
-    ##            btl   holiday home owner occupied 
-    ##          12296          27996          13112
-
-``` r
-# Percentage: waiting for an answer
 library(janitor)
-
+df = data_frame(merged$arrears, merged$mortgage_type, merged$occupancy)
 apply(df, 2, tabyl)
 ```
 
@@ -559,31 +560,23 @@ Plot average predicted vs average actual over time.
 ``` r
 train$default_flag = as.numeric(as.character(train$default_flag))
 agg_1 = train %>% group_by(obs_m) %>% summarise_at(vars(default_flag, pred_default), mean)
-agg_1
+
+plot(agg_1$obs_m, agg_1$default_flag,
+     main = "Actual Default vs Predicted Default",
+     xlab = "Time",
+     ylab = "Default rate",
+     type = "o", col  = "blue", pch=20,
+     )
+lines(agg_1$obs_m, agg_1$pred_default, 
+      lty = 2, col="red")
+
+points(agg_1$obs_m, agg_1$pred_default,
+       col="red", pch = 18)
+
+legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
-    ## # A tibble: 60 × 3
-    ##    obs_m      default_flag pred_default
-    ##    <date>            <dbl>        <dbl>
-    ##  1 2014-04-01       0.0588       0.0169
-    ##  2 2014-05-01       0            0.0205
-    ##  3 2014-06-01       0            0.0239
-    ##  4 2014-07-01       0.0638       0.0246
-    ##  5 2014-08-01       0            0.0275
-    ##  6 2014-09-01       0.04         0.0301
-    ##  7 2014-10-01       0.0208       0.0291
-    ##  8 2014-11-01       0            0.0254
-    ##  9 2014-12-01       0.0444       0.0233
-    ## 10 2015-01-01       0            0.0199
-    ## # … with 50 more rows
-
-``` r
-plot(agg_1$obs_m, agg_1$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y" )
-points(agg_1$obs_m, agg_1$pred_default, col="red", pch="*")
-lines(agg_1$obs_m, agg_1$pred_default, col="red",lty=2)
-```
-
-![](newrmd_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 Create 3 categories of borrower credit score.
 
@@ -591,23 +584,7 @@ Create 3 categories of borrower credit score.
 train = mutate(train, bcs = ifelse(credit_score<= 650, "low-score", ifelse(credit_score > 650 & credit_score <= 800, "mid-score", "high-score")))
 
 agg_2 = train %>% group_by(bcs) %>% summarise_at(vars(default_flag, pred_default), mean)
-agg_2
-```
 
-    ## # A tibble: 3 × 3
-    ##   bcs        default_flag pred_default
-    ##   <chr>             <dbl>        <dbl>
-    ## 1 high-score      0.00907       0.0121
-    ## 2 low-score       0.0345        0.0353
-    ## 3 mid-score       0.0210        0.0204
-
-``` r
-class(agg_2)
-```
-
-    ## [1] "tbl_df"     "tbl"        "data.frame"
-
-``` r
 barplot(t(as.matrix(agg_2[,-1])),
         main = "Actual Default vs Predicted Default",
         xlab = "Score Category",
@@ -620,25 +597,39 @@ legend("topleft",
        fill = gray.colors(2))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 ### Question 15
 
-Generate out of sample predictions.
+Generate out-of-sample predictions.
 
 ``` r
 test$oos_pred = predict(log_mod, test, type = "response")
 
 test$default_flag = as.numeric(as.character(test$default_flag))
-
-agg_3 = test %>% group_by(obs_m) %>% summarise_at(vars(default_flag, oos_pred), mean)
-
-plot(agg_3$obs_m, agg_3$default_flag, type="o", col="blue", pch="o", lty=1, ylab="y")
-points(agg_3$obs_m, agg_3$oos_pred, col="red", pch="*")
-lines(agg_3$obs_m, agg_3$oos_pred, col="red",lty=2)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+Plot average predicted vs average actual over time.
+
+``` r
+agg_3 = test %>% group_by(obs_m) %>% summarise_at(vars(default_flag, oos_pred), mean)
+
+plot(agg_3$obs_m, agg_3$default_flag,
+     main = "Actual Default vs Predicted Default",
+     xlab = "Time",
+     ylab = "Default rate",
+     type = "o", col  = "blue", pch=20,
+     )
+lines(agg_3$obs_m, agg_3$oos_pred, 
+      lty = 2, col="red")
+
+points(agg_3$obs_m, agg_3$oos_pred,
+       col="red", pch = 18)
+
+legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
+```
+
+![](newrmd_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
 ### Question 16
 
@@ -669,36 +660,9 @@ confusionMatrix(test$default_flag, test$outcome)
 Create a receiver operating curve.
 
 ``` r
-library(pROC)
-test_roc = roc(test$default_flag ~ test$outcome, plot = TRUE, print.auc = TRUE)
-```
-
-![](newrmd_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
-
-``` r
-print(test_roc)
-```
-
-    ## 
-    ## Call:
-    ## roc.formula(formula = test$default_flag ~ test$outcome, plot = TRUE,     print.auc = TRUE)
-    ## 
-    ## Data: test$outcome in 8115 controls (test$default_flag 0) < 211 cases (test$default_flag 1).
-    ## Area under the curve: 0.5032
-
-``` r
-library(ROCR)
-pred = prediction(test$oos_pred, test$default_flag)
-perf <- performance(pred,"tpr","fpr")
-plot(perf,colorize=TRUE)
-```
-
-![](newrmd_files/figure-gfm/unnamed-chunk-44-1.png)<!-- -->
-
-``` r
 library(PRROC)
 PRROC_obj <- roc.curve(scores.class0 = test$oos_pred, weights.class0=test$default_flag, curve=TRUE)
 plot(PRROC_obj)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-45-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
