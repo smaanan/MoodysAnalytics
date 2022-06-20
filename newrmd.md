@@ -1,7 +1,7 @@
 Moody’s Analytics Coding Test
 ================
 Said Maanan
-2022-06-19
+2022-06-20
 
 ## Introduction
 
@@ -84,11 +84,6 @@ plot(unique(data[,c("age","lifecycle")]), type = "b", pch = 19, col = "red",
 ```
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
-
-``` r
- library(ggplot2)
- library(gridExtra)
-```
 
 ### Question 4
 
@@ -191,7 +186,11 @@ fitted_bl = mod_bl$fitted.values
 fitted_st = mod_st$fitted.values
 ```
 
-How can you ensure that the predictions are bounded between 0 and 1
+How can you ensure that the predictions are bounded between 0 and 1?
+
+In order to ensure that the predictions are bounded between 0 and 1, it
+is more appropriate to use a Fixed-Effect Generalized Linear Model
+instead of an Ordinary Least Squares.
 
 ``` r
 mod_bound = feglm(default_rate ~ account_id | age + r12_gdp_bl, data = data, family = "quasibinomial")
@@ -206,17 +205,7 @@ mod_bound_st = feglm(default_rate ~ account_id | age + r12_gdp_st, data = data, 
 ```
 
 Plot the actual vs the predicted values of the default rate for the two
-loans selected previously
-
-``` r
-#plot(fitted_bl, data[unlist(mod_bl$obs_selection),]$default_rate)
-#plot(fitted_st, data[unlist(mod_st$obs_selection),]$default_rate)
-
-f_1 = mod_bound$fitted.values
-plot(f_1, data[unlist(mod_bound$obs_selection),]$default_rate)
-```
-
-![](newrmd_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+loans selected previously.
 
 ``` r
 pred_1 = predict(mod_bound, book_1)
@@ -225,6 +214,27 @@ pred_2 = predict(mod_bound, book_2)
 df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
 df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
 
+df_1 = df_1[-1,]
+df_2 = df_2[-1,]
+
+par(mfrow=c(1,2))
+
+plot(x = df_1$Actual, y = df_1$Predicted, type = "p", pch = 19, col = "black",
+     main = "Loan 1",
+     xlab = "Actual",
+     ylab = "Predicted")
+
+plot(x = df_2$Actual, y = df_2$Predicted, type = "p", pch = 19, col = "black",
+     main = "Loan 2",
+     xlab = "Actual",
+     ylab = "Predicted")
+```
+
+![](newrmd_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+Aggregate actual rates and predicted rates by age.
+
+``` r
 par(mfrow=c(1,2))
 
 plot(x = df_1$Age, y = df_1$Predicted, type = "p", pch = 19, col = "red",
