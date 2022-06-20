@@ -173,17 +173,14 @@ pred_2 = predict(mod_bound, book_2)
 df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
 df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
 
-df_1 = df_1[-1,]
-df_2 = df_2[-1,]
-
 par(mfrow=c(1,2))
 
-plot(x = df_1$Actual, y = df_1$Predicted, type = "p", pch = 19, col = "black",
+plot(x = df_1[-1,]$Actual, y = df_1[-1,]$Predicted, type = "p", pch = 19, col = "black",
      main = "Loan 1",
      xlab = "Actual",
      ylab = "Predicted")
 
-plot(x = df_2$Actual, y = df_2$Predicted, type = "p", pch = 19, col = "black",
+plot(x = df_2[-1,]$Actual, y = df_2[-1,]$Predicted, type = "p", pch = 19, col = "black",
      main = "Loan 2",
      xlab = "Actual",
      ylab = "Predicted")
