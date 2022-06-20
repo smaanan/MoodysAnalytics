@@ -255,6 +255,9 @@ legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
+The predicted default rate follows roughly the same pattern accross time
+as the actual default rate for the two loans.
+
 ## Problem 2
 
 ### Question 1
@@ -550,6 +553,22 @@ summary(log_mod)
     ## 
     ## Number of Fisher Scoring iterations: 7
 
+The default rate decreases when the credit score increases, the variable
+is significant.
+
+The odds of default increase when the collateral is a holiday home or an
+owner occupied home as compared to when it is a buy-to-let home, however
+the relationship is not significant.
+
+The odds of default increase when the current loan to value increases,
+the relationship is significant.
+
+The odds of default increase when the mortgage is linear as compared to
+when it is bullet, however the relationship is not significant.
+
+The odds of default decrease with an increase in GDP or in the house
+price index, and the relationships are significant.
+
 ### Question 13
 
 Generate predicted default rates from the model.
@@ -584,6 +603,14 @@ legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), p
 ```
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+
+Based on the results of the figure above, the predicted default rates
+follow roughly the movement of the actual default rates accross time,
+though we note some differences; there is far less fluctuation in the
+predicted rates than the actual rates during the period from mid-2014 to
+mid-2015, the predicted default rates tend to be higher than the actual
+default rates since the beginning of 2018, and lower from mid-2016 to
+mid-2017.
 
 Create 3 categories of borrower credit score.
 
@@ -638,6 +665,9 @@ legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), p
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
+Based on the figure above, we can see that the model behaves roughly the
+same way out-of-sample as it does in-sample.
+
 ### Question 16
 
 Create `outcome` variable.
@@ -673,3 +703,8 @@ plot(PRROC_obj)
 ```
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+
+Since the area under the curve occupies about 74 percent of the figure,
+and knowing that an AUC of 50 percent refers to the random guess line,
+we can conclude that our model performs better compared to random
+guessing.

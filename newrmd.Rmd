@@ -211,6 +211,8 @@ points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
 legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 ```
 
+The predicted default rate follows roughly the same pattern accross time as the actual default rate for the two loans.
+
 ## Problem 2
 
 ### Question 1
@@ -393,6 +395,15 @@ Interpret the coefficients of the model.
 ```{r}
 summary(log_mod)
 ```
+The default rate decreases when the credit score increases, the variable is significant.
+
+The odds of default increase when the collateral is a holiday home or an owner occupied home as compared to when it is a buy-to-let home, however the relationship is not significant.
+
+The odds of default increase when the current loan to value increases, the relationship is significant.
+
+The odds of default increase when the mortgage is linear as compared to when it is bullet, however the relationship is not significant.
+
+The odds of default decrease with an increase in GDP or in the house price index, and the relationships are significant. 
 
 ### Question 13
 
@@ -426,6 +437,8 @@ points(agg_1$obs_m, agg_1$pred_default,
 
 legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
+
+Based on the results of the figure above, the predicted default rates follow roughly the movement of the actual default rates accross time, though we note some differences; there is far less fluctuation in the predicted rates than the actual rates during the period from mid-2014 to mid-2015, the predicted default rates tend to be higher than the actual default rates since the beginning of 2018, and lower from mid-2016 to mid-2017.
 
 Create 3 categories of borrower credit score.
 
@@ -477,6 +490,8 @@ points(agg_3$obs_m, agg_3$oos_pred,
 legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
+Based on the figure above, we can see that the model behaves roughly the same way out-of-sample as it does in-sample.
+
 ### Question 16
 
 Create `outcome` variable.
@@ -508,4 +523,4 @@ PRROC_obj <- roc.curve(scores.class0 = test$oos_pred, weights.class0=test$defaul
 plot(PRROC_obj)
 ```
 
-
+Since the area under the curve occupies about 74 percent of the figure, and knowing that an AUC of 50 percent refers to the random guess line, we can conclude that our model performs better compared to random guessing.
