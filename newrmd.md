@@ -237,7 +237,7 @@ par(mfrow=c(1,2))
 plot(x = df_1$Age, y = df_1$Predicted, type = "p", pch = 19, col = "red",
      main = "Loan 1",
      xlab = "Time",
-     ylab = "Default rate")
+     ylab = "Default Rate")
 
 points(x = df_1$Age, df_1$Actual, type = "p", pch = 19, col = "black")
 
@@ -246,7 +246,7 @@ legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 plot(x = df_2$Age, y = df_2$Predicted, type = "p", pch = 19, col = "red",
      main = "Loan 2",
      xlab = "Time",
-     ylab = "Default rate")
+     ylab = "Default Rate")
 
 points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
 
