@@ -704,7 +704,16 @@ plot(PRROC_obj)
 
 ![](newrmd_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
 
+Report the Gini coefficient of the model
+
+``` r
+library(ModelMetrics)
+gini(test$default_flag, test$oos_pred)
+```
+
+    ## [1] 0.4801856
+
 Since the area under the curve occupies about 74 percent of the figure,
 and knowing that an AUC of 50 percent refers to the random guess line,
 we can conclude that our model performs better compared to random
-guessing.
+guessing, with an acceptable discrimination.
