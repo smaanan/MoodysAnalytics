@@ -1,7 +1,7 @@
 Moody’s Analytics Coding Test
 ================
 Said Maanan
-2022-06-20
+2022-06-21
 
 ## Introduction
 
@@ -15,7 +15,7 @@ load the data frame `data.csv`:
 
 ``` r
 library(readr)
-data <- read_csv("~/Downloads/Coding_Test/data.csv")
+data <- read_csv("data.csv")
 ```
 
 The `readr` package tells us that the data frame consists of 5 variables
@@ -66,9 +66,7 @@ Generate the variable `lifecycle`:
 
 ``` r
 library(tidyverse)
-```
 
-``` r
 data <- data %>% 
   group_by(age) %>% 
   mutate(lifecycle = mean(default_rate, na.rm = TRUE))
@@ -83,15 +81,35 @@ plot(unique(data[,c("age","lifecycle")]), type = "b", pch = 19, col = "red",
      ylab = "Lifecycle")
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ### Question 4
 
 Pick two loans with the default rate observed for at least five periods.
 
 ``` r
-book_1 = data[data$account_id=='400293',]
-book_2 = data[data$account_id=='401749',]
+# book_1 = data[data$account_id=='400293',]
+# book_2 = data[data$account_id=='401749',]
+
+# Select all the accounts for which more than six periods are not NAs.
+
+a = data %>% 
+  group_by(account_id) %>% 
+  dplyr::summarize(p = sum(!is.na(default_rate))) %>% 
+  filter(p > 6) %>% 
+  pull(account_id)
+
+# Draw two accounts randomly.
+
+b = as.character(sample(a, 2, replace = FALSE))
+
+# Create first book
+
+book_1 = data[data$account_id==b[1],]
+
+# Create second book
+
+book_2 = data[data$account_id==b[2],]
 ```
 
 For each loan, plot the lifecycle of the default rate.
@@ -110,14 +128,14 @@ plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red",
      ylab = "Default rate")
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 Do the two loans follow the portfolio’s lifecycle?
 
 ``` r
 par(mfrow=c(1,2))
 
-plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.035),
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.05),
      main = "Loan 1",
      xlab = "Age",
      ylab = "Default rate")
@@ -126,7 +144,9 @@ points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
 
 lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
 
-plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.08),
+legend("topleft", c("Default rate","Life cycle"), col=c("red","black"), pch=c(19,19), lty = c(1, 2))
+
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.05),
      main = "Loan 2",
      xlab = "Age",
      ylab = "Default rate")
@@ -134,12 +154,13 @@ plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red",
 points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
 
 lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
+
+legend("topleft", c("Default rate","Life cycle"), col=c("red","black"), pch=c(19,19), lty = c(1, 2))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-The first account `400293` seems to align closely with the portfolio’s
-lifecycle, but the second account `401749` doesn’t.
+Both loans follow closely the portolio’s lifecycle.
 
 ### Question 5
 
@@ -227,7 +248,7 @@ plot(x = df_2[-1,]$Actual, y = df_2[-1,]$Predicted, type = "p", pch = 19, col = 
      ylab = "Predicted")
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 Aggregate actual rates and predicted rates by age.
 
@@ -253,7 +274,7 @@ points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
 legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 The predicted default rate follows roughly the same pattern accross time
 as the actual default rate for the two loans.
@@ -264,7 +285,7 @@ as the actual default rate for the two loans.
 
 ``` r
 library(readr)
-mortgages_small <- read_csv("~/Downloads/Coding_Test/mortgages_small.csv")
+mortgages_small <- read_csv("mortgages_small.csv")
 ```
 
 How many observations in the data set?
@@ -343,7 +364,7 @@ barplot(monthly_loans$n,
         names.arg = 1:12)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ### Question 3
 
@@ -386,7 +407,7 @@ barplot(yearly_loans$n,
         names.arg = yearly_loans$year)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 ### Question 4
 
@@ -417,7 +438,7 @@ summary(mortgages_small$obs_lag)
 Merge `macro.csv` and `mortgages.csv`
 
 ``` r
-macros <- read_csv("~/Downloads/Coding_Test/macros.csv")
+macros <- read_csv("macros.csv")
 macros$date = ym(macros$date)
 merged = merge(x = mortgages_small, y = macros, by.x = "obs_m", by.y = "date", all = TRUE)
 ```
@@ -602,7 +623,7 @@ points(agg_1$obs_m, agg_1$pred_default,
 legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
 Based on the results of the figure above, the predicted default rates
 follow roughly the movement of the actual default rates accross time,
@@ -619,19 +640,19 @@ train = mutate(train, bcs = ifelse(credit_score<= 650, "low-score", ifelse(credi
 
 agg_2 = train %>% group_by(bcs) %>% summarise_at(vars(default_flag, pred_default), mean)
 
-barplot(t(as.matrix(agg_2[,-1])),
+barplot(t(as.matrix(agg_2[c(2, 3, 1),-1])),
         main = "Actual Default vs Predicted Default",
         xlab = "Score Category",
         ylab = "Default Rate",
-        names.arg = c("High Score", "Low Score", "Mid Score"),
+        names.arg = c("Low Score", "Mid Score", "High Score"),
         col = gray.colors(2),
         beside = TRUE)
-legend("topleft",
+legend("topright",
        c("Default", "Pred. Default"),
        fill = gray.colors(2))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
 ### Question 15
 
@@ -663,7 +684,7 @@ points(agg_3$obs_m, agg_3$oos_pred,
 legend("topright", c("Actual","Predicted"), lty = c(1,2), col=c("blue","red"), pch=c(20,18))
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
 Based on the figure above, we can see that the model behaves roughly the
 same way out-of-sample as it does in-sample.
@@ -702,7 +723,7 @@ PRROC_obj <- roc.curve(scores.class0 = test$oos_pred, weights.class0=test$defaul
 plot(PRROC_obj)
 ```
 
-![](newrmd_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+![](newrmd_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
 
 Report the Gini coefficient of the model
 

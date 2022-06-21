@@ -20,7 +20,7 @@ The first step to answering the questions in the first problem is to load the da
 
 ```{r}
 library(readr)
-data <- read_csv("~/Downloads/Coding_Test/data.csv")
+data <- read_csv("data.csv")
 ```
 
 The `readr` package tells us that the data frame consists of 5 variables and 13646 observations. Now we can start answering our questions.
@@ -62,9 +62,7 @@ Generate the variable `lifecycle`:
 
 ```{r}
 library(tidyverse)
-```
 
-```{r}
 data <- data %>% 
   group_by(age) %>% 
   mutate(lifecycle = mean(default_rate, na.rm = TRUE))
@@ -85,8 +83,29 @@ plot(unique(data[,c("age","lifecycle")]), type = "b", pch = 19, col = "red",
 Pick two loans with the default rate observed for at least five periods.
 
 ```{r}
-book_1 = data[data$account_id=='400293',]
-book_2 = data[data$account_id=='401749',]
+# book_1 = data[data$account_id=='400293',]
+# book_2 = data[data$account_id=='401749',]
+
+# Select all the accounts for which more than six periods are not NAs.
+
+a = data %>% 
+  group_by(account_id) %>% 
+  dplyr::summarize(p = sum(!is.na(default_rate))) %>% 
+  filter(p > 6) %>% 
+  pull(account_id)
+
+# Draw two accounts randomly.
+
+b = as.character(sample(a, 2, replace = FALSE))
+
+# Create first book
+
+book_1 = data[data$account_id==b[1],]
+
+# Create second book
+
+book_2 = data[data$account_id==b[2],]
+
 ```
 
 For each loan, plot the lifecycle of the default rate.
@@ -111,7 +130,7 @@ Do the two loans follow the portfolio's lifecycle?
 
 par(mfrow=c(1,2))
 
-plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.035),
+plot(x = book_1$age, y = book_1$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.05),
      main = "Loan 1",
      xlab = "Age",
      ylab = "Default rate")
@@ -120,7 +139,9 @@ points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
 
 lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
 
-plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.08),
+legend("topleft", c("Default rate","Life cycle"), col=c("red","black"), pch=c(19,19), lty = c(1, 2))
+
+plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red", ylim = c(0, 0.05),
      main = "Loan 2",
      xlab = "Age",
      ylab = "Default rate")
@@ -128,9 +149,11 @@ plot(x = book_2$age, y = book_2$default_rate, type = "b", pch = 19, col = "red",
 points(unique(data[,c("age","lifecycle")]), type = "p", pch = 19, col = "black")
 
 lines(unique(data[,c("age","lifecycle")]), lty = 2, col="black")
+
+legend("topleft", c("Default rate","Life cycle"), col=c("red","black"), pch=c(19,19), lty = c(1, 2))
 ```
 
-The first account `400293` seems to align closely with the portfolio's lifecycle, but the second account `401749` doesn't.
+Both loans follow closely the portolio's lifecycle.
 
 ### Question 5
 
@@ -219,7 +242,7 @@ The predicted default rate follows roughly the same pattern accross time as the 
 
 ```{r}
 library(readr)
-mortgages_small <- read_csv("~/Downloads/Coding_Test/mortgages_small.csv")
+mortgages_small <- read_csv("mortgages_small.csv")
 ```
 
 How many observations in the data set?
@@ -324,7 +347,7 @@ summary(mortgages_small$obs_lag)
 Merge `macro.csv` and `mortgages.csv`
 
 ```{r}
-macros <- read_csv("~/Downloads/Coding_Test/macros.csv")
+macros <- read_csv("macros.csv")
 macros$date = ym(macros$date)
 merged = merge(x = mortgages_small, y = macros, by.x = "obs_m", by.y = "date", all = TRUE)
 ```
@@ -447,14 +470,14 @@ train = mutate(train, bcs = ifelse(credit_score<= 650, "low-score", ifelse(credi
 
 agg_2 = train %>% group_by(bcs) %>% summarise_at(vars(default_flag, pred_default), mean)
 
-barplot(t(as.matrix(agg_2[,-1])),
+barplot(t(as.matrix(agg_2[c(2, 3, 1),-1])),
         main = "Actual Default vs Predicted Default",
         xlab = "Score Category",
         ylab = "Default Rate",
-        names.arg = c("High Score", "Low Score", "Mid Score"),
+        names.arg = c("Low Score", "Mid Score", "High Score"),
         col = gray.colors(2),
         beside = TRUE)
-legend("topleft",
+legend("topright",
        c("Default", "Pred. Default"),
        fill = gray.colors(2))
 ```
