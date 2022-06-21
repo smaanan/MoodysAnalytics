@@ -185,14 +185,14 @@ summary(mod_bl)
     ##                  Within R2: 0.002527
 
 ``` r
-mod_st <- feols(default_rate ~ account_id | age^r12_gdp_bl, data = data)
+mod_st <- feols(default_rate ~ account_id | age^r12_gdp_st, data = data)
 summary(mod_st)
 ```
 
     ## OLS estimation, Dep. Var.: default_rate
     ## Observations: 2,372 
-    ## Fixed-effects: age^r12_gdp_bl: 8
-    ## Standard-errors: Clustered (age^r12_gdp_bl) 
+    ## Fixed-effects: age^r12_gdp_st: 8
+    ## Standard-errors: Clustered (age^r12_gdp_st) 
     ##             Estimate Std. Error  t value Pr(>|t|)    
     ## account_id -1.34e-08   6.46e-09 -2.07982 0.076106 .  
     ## ---
@@ -214,8 +214,8 @@ is more appropriate to use a Fixed-Effect Generalized Linear Model
 instead of an Ordinary Least Squares.
 
 ``` r
-mod_bound = feglm(default_rate ~ account_id | age + r12_gdp_bl, data = data, family = "quasibinomial")
-summary(mod_bound$fitted.values)
+mod_bound_bl = feglm(default_rate ~ account_id | age + r12_gdp_bl, data = data, family = "quasibinomial")
+summary(mod_bound_bl$fitted.values)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
@@ -229,8 +229,8 @@ Plot the actual vs the predicted values of the default rate for the two
 loans selected previously.
 
 ``` r
-pred_1 = predict(mod_bound, book_1)
-pred_2 = predict(mod_bound, book_2)
+pred_1 = predict(mod_bound_bl, book_1)
+pred_2 = predict(mod_bound_bl, book_2)
 
 df_1 = data.frame(Age = book_1$age, Actual = book_1$default_rate, Predicted = pred_1)
 df_2 = data.frame(Age = book_2$age, Actual = book_2$default_rate, Predicted = pred_2)
@@ -255,21 +255,21 @@ Aggregate actual rates and predicted rates by age.
 ``` r
 par(mfrow=c(1,2))
 
-plot(x = df_1$Age, y = df_1$Predicted, type = "p", pch = 19, col = "red",
+plot(x = df_1[-1,]$Age, y = df_1[-1,]$Predicted, type = "p", pch = 19, col = "red", ylim = c(0, 0.1),
      main = "Loan 1",
      xlab = "Time",
      ylab = "Default Rate")
 
-points(x = df_1$Age, df_1$Actual, type = "p", pch = 19, col = "black")
+points(x = df_1[-1,]$Age, df_1[-1,]$Actual, type = "p", pch = 19, col = "black")
 
 legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 
-plot(x = df_2$Age, y = df_2$Predicted, type = "p", pch = 19, col = "red",
+plot(x = df_2[-1,]$Age, y = df_2[-1,]$Predicted, type = "p", pch = 19, col = "red", ylim = c(0, 0.1),
      main = "Loan 2",
      xlab = "Time",
      ylab = "Default Rate")
 
-points(x = df_2$Age, df_2$Actual, type = "p", pch = 19, col = "black")
+points(x = df_2[-1,]$Age, df_2[-1,]$Actual, type = "p", pch = 19, col = "black")
 
 legend("topright", c("Actual","Predicted"), col=c("black","red"), pch=c(19,19))
 ```
